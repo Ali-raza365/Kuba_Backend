@@ -14,11 +14,6 @@ const userSchema = new mongoose.Schema({
         trim: true,
         unique: true
     },
-    username: {
-        type: String,
-        trim: true,
-        // unique: true
-    },
     password: {
         type: String,
         required: true
@@ -27,8 +22,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: 'https://res.cloudinary.com/devatchannel/image/upload/v1602752402/avatar/avatar_cugq40.png'
     },
-    resetPasswordToken: String,
-    resetPasswordExpires: String,
+    type:{ type: String, default: 'email' },
+    user_verified :{ type: Boolean, default: false },
+    otpCode: String,
+    otpExpires: String,
     role: { type: String, default: 'user' },
     mobile: { type: String, default: '' },
     favorites: [
@@ -72,16 +69,4 @@ const userSchema = new mongoose.Schema({
 })
 
 
-module.exports = mongoose.model('user', userSchema)
-
-//    payment_methods: [
-//         {
-//             customer_id: String,
-//             payment_method_id: String,
-//             last4: Number,//"4242",
-//             brand: String,//"Visa",
-//             expiration_month: Number, //2,
-//             expiration_year: Number, //2030,
-//             is_default: Boolean,
-//         }
-//     ]
+module.exports = mongoose.model('User', userSchema)

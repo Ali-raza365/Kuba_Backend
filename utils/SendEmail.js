@@ -1,19 +1,36 @@
 const nodemailer = require("nodemailer");
+const { OAuth2Client } = require("google-auth-library")
 
-function createTransporter() {
-  // Create and return a Nodemailer transporter with your email service provider details
+const mailClientId = process.env.MAIL_CLIENT_ID;
+const mailClientSecret = process.env.MAIL_CLIENT_SECRET;
+const mailRefreshToken = process.env.MAIL_REFRESH_TOKEN;
+const senderEmailAddress = process.env.SENDER_EMAIL_ADDRESS;
+const OAUTH_PLAYGROUND = "https://developers.google.com/oauthplayground";
+
+async function createTransporter() {
+  console.log({ mailClientId, mailClientSecret, mailRefreshToken, senderEmailAddress })
+
+  const oAuth2Client = new OAuth2Client(
+    mailClientId,
+    mailClientSecret,
+    OAUTH_PLAYGROUND
+  );
+
+  oAuth2Client.setCredentials({ refresh_token: mailRefreshToken });
+
+    const access_token = await oAuth2Client.getAccessToken();
+
+
   return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    service:"Gmail",
-    port: 587,
-    secure: true,
-    // requireTLS: true,
-    logger: true,
-    debug: true,
+    service: "gmail",
     auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD,
-    }
+      type: "OAuth2",
+      user: senderEmailAddress,
+      clientId: mailClientId,
+      clientSecret: mailClientSecret,
+      refreshToken: mailRefreshToken,
+      access_token,
+    },
   });
 }
 

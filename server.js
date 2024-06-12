@@ -38,6 +38,7 @@ const http = require('http').createServer(app)
 // Routes
 app.use('/api', require('./routes/authRouter'))
 app.use('/api', require('./routes/userRouter'))
+app.use('/api/hotel', require('./routes/hotelRouter'))
 // app.use('/api', require('./routes/eventRouter'))
 // app.use('/api', require('./routes/activitiesRouter'))
 // app.use('/api', require('./routes/chatRouter'))
