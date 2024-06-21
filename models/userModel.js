@@ -26,6 +26,7 @@ const userSchema = new mongoose.Schema({
     user_verified :{ type: Boolean, default: false },
     otpCode: String,
     otpExpires: String,
+    phone:String,
     role: { type: String, default: 'user' },
     mobile: { type: String, default: '' },
     favorites: [

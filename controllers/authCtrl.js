@@ -3,13 +3,13 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
 const sendEmail = require('../utils/SendEmail')
-const  getRandomProfilePicture  = require('../utils/validation')
-const  { OAuth2Client } = require('google-auth-library')
+const getRandomProfilePicture = require('../utils/validation')
+const { OAuth2Client } = require('google-auth-library')
 
 const authCtrl = {
     register: async (req, res) => {
         try {
-            const { fullname, email, password } = req.body
+            const { fullname, email, password , phone} = req.body
 
             const user_email = await Users.findOne({ email })
             if (user_email) return res.status(400).json({ msg: "This email already exists." })
@@ -19,16 +19,17 @@ const authCtrl = {
 
             const passwordHash = await bcrypt.hash(password, 12)
 
-                const otp = crypto.randomInt(100000, 999999).toString();
-                // let mail_result = await sendEmail(email, otp)
+            const otp = crypto.randomInt(100000, 999999).toString();
+            // let mail_result = await sendEmail(email, otp)
 
             const newUser = new Users({
                 fullname,
-                 email,
+                email,
+                phone,
                 password: passwordHash,
-                avatar:getRandomProfilePicture(),
-                otpCode:otp,
-                otpExpires :Date.now() + 3600000,
+                avatar: getRandomProfilePicture(),
+                otpCode: otp,
+                otpExpires: Date.now() + 3600000,
             })
 
             const access_token = createAccessToken({ id: newUser._id })
@@ -83,13 +84,13 @@ const authCtrl = {
 
             console.log({ otp })
 
-            let mail_result = await sendEmail(email, otp)
+            // let mail_result = await sendEmail(email, otp)
+            // console.log({ mail_result })
 
             user.otpCode = otp;
             user.otpExpires = Date.now() + 3600000; // Token expires in 1 hour
             await user.save();
 
-            console.log({ mail_result })
 
             res.json({ message: 'Password reset email sent' });
         } catch (error) {
@@ -116,6 +117,9 @@ const authCtrl = {
             if (user.otpExpires < Date.now()) {
                 return res.status(401).json({ error: 'OTP expired' });
             }
+
+            user.user_verified = true;
+            await user.save()
 
             // OTP is valid
             res.json({ message: 'OTP verified successfully' });
@@ -153,62 +157,62 @@ const authCtrl = {
             res.status(500).json({ error: 'Internal server error' });
         }
     },
-    googleLogin: async(req, res) => {
+    googleLogin: async (req, res) => {
         try {
-          const { id_token } = req.body
-          const verify = await client.verifyIdToken({
-            idToken: id_token, audience: `${process.env.MAIL_CLIENT_ID}`
-          })
-    
-          const {
-            email, email_verified, name, picture
-          } = verify.getPayload()
-    
-          if(!email_verified)
-            return res.status(500).json({msg: "Email verification failed."})
-    
-          const password = email + 'your google secrect password'
-          const passwordHash = await bcrypt.hash(password, 12)
-    
-          const user = await Users.findOne({email: email})
-    
-          if(user){
-            const isMatch = await bcrypt.compare(password, user.password)
-            if (!isMatch) return res.status(400).json({ msg: "Password is incorrect." })
-            const access_token = createAccessToken({ id: user._id })
-            res.json({
-                msg: 'Login Success!',
-                access_token,
-                user: {
-                    ...user._doc,
-                    password: ''
-                }
+            const { id_token } = req.body
+            const verify = await client.verifyIdToken({
+                idToken: id_token, audience: `${process.env.MAIL_CLIENT_ID}`
             })
-          }else{
-            const user = {
-              fullname:name, 
-              email, 
-              password: passwordHash, 
-              avatar: picture,
-              type: 'google'
+
+            const {
+                email, email_verified, name, picture
+            } = verify.getPayload()
+
+            if (!email_verified)
+                return res.status(500).json({ msg: "Email verification failed." })
+
+            const password = email + 'your google secrect password'
+            const passwordHash = await bcrypt.hash(password, 12)
+
+            const user = await Users.findOne({ email: email })
+
+            if (user) {
+                const isMatch = await bcrypt.compare(password, user.password)
+                if (!isMatch) return res.status(400).json({ msg: "Password is incorrect." })
+                const access_token = createAccessToken({ id: user._id })
+                res.json({
+                    msg: 'Login Success!',
+                    access_token,
+                    user: {
+                        ...user._doc,
+                        password: ''
+                    }
+                })
+            } else {
+                const user = {
+                    fullname: name,
+                    email,
+                    password: passwordHash,
+                    avatar: picture,
+                    type: 'google'
+                }
+                const newUser = new Users(user)
+                const access_token = createAccessToken({ id: newUser._id })
+                await newUser.save()
+                res.json({
+                    msg: 'Register Success!',
+                    access_token,
+                    user: {
+                        ...newUser._doc,
+                        password: ''
+                    }
+                })
             }
-            const newUser = new Users(user)
-            const access_token = createAccessToken({ id: newUser._id })
-            await newUser.save()
-            res.json({
-                msg: 'Register Success!',
-                access_token,
-                user: {
-                    ...newUser._doc,
-                    password: ''
-                }
-            })
-          }
-          
+
         } catch (err) {
-          return res.status(500).json({msg: err.message})
+            return res.status(500).json({ msg: err.message })
         }
-      },
+    },
 }
 
 const createAccessToken = (payload) => {
