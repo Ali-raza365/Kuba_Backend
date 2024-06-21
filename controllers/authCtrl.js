@@ -19,8 +19,8 @@ const authCtrl = {
 
             const passwordHash = await bcrypt.hash(password, 12)
 
-            const otp = crypto.randomInt(100000, 999999).toString();
-            // let mail_result = await sendEmail(email, otp)
+                const otp = crypto.randomInt(100000, 999999).toString();
+                let mail_result = await sendEmail(email, otp)
 
             const newUser = new Users({
                 fullname,
@@ -51,14 +51,10 @@ const authCtrl = {
         try {
             const { email, password } = req.body
             const user = await Users.findOne({ email })
-
             if (!user) return res.status(400).json({ msg: "This email does not exist." })
-
             const isMatch = await bcrypt.compare(password, user.password)
             if (!isMatch) return res.status(400).json({ msg: "Password is incorrect." })
-
             const access_token = createAccessToken({ id: user._id })
-
             res.json({
                 msg: 'Login Success!',
                 access_token,
@@ -75,7 +71,7 @@ const authCtrl = {
         const { email } = req.body;
         try {
             const user = await Users.findOne({ email })
-
+        console.log(user)
             if (!user) {
                 return res.status(404).json({ error: 'User not found' });
             }

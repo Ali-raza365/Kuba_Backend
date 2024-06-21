@@ -1,4 +1,4 @@
-const nodemailer = require("nodemailer");
+const nodemailer = require('nodemailer');
 const { OAuth2Client } = require("google-auth-library")
 
 const mailClientId = process.env.MAIL_CLIENT_ID;
@@ -7,20 +7,7 @@ const mailRefreshToken = process.env.MAIL_REFRESH_TOKEN;
 const senderEmailAddress = process.env.SENDER_EMAIL_ADDRESS;
 const OAUTH_PLAYGROUND = "https://developers.google.com/oauthplayground";
 
-async function createTransporter() {
-  console.log({ mailClientId, mailClientSecret, mailRefreshToken, senderEmailAddress })
-
-  const oAuth2Client = new OAuth2Client(
-    mailClientId,
-    mailClientSecret,
-    OAUTH_PLAYGROUND
-  );
-
-  oAuth2Client.setCredentials({ refresh_token: mailRefreshToken });
-
-    const access_token = await oAuth2Client.getAccessToken();
-
-
+async function createTransporter(access_token) {
   return nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -36,7 +23,19 @@ async function createTransporter() {
 
 async function sendEmail(to, otp) {
   try {
-    const transporter = createTransporter();
+
+    const oAuth2Client = new OAuth2Client(
+      mailClientId,
+      mailClientSecret,
+      OAUTH_PLAYGROUND
+    );
+
+    oAuth2Client.setCredentials({ refresh_token: mailRefreshToken });
+
+    const access_token = await oAuth2Client.getAccessToken();
+    console.log(access_token)
+    const transporter =await  createTransporter(access_token);
+    console.log({transporter})
     const message = {
       from: process.env.EMAIL_USERNAME,
       to,
@@ -64,11 +63,18 @@ async function sendEmail(to, otp) {
        </div>
                `,
     };
-    const info = await transporter.sendMail(message);
-    console.log('Email sent:', info.response);
-    return info;
+    transporter?.sendMail(message,function(error, info) {
+      if (error) {
+        console.error(error);
+      } else {
+        console.log('Email sent: ' + info.response);
+      }
+    });
+    // console.log('Email sent:', info.response);
+    // return info;
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.log({...error})
+    // console.error('Error sending email:', error);
     throw error;
   }
 }

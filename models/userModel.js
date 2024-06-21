@@ -28,7 +28,6 @@ const userSchema = new mongoose.Schema({
     otpExpires: String,
     phone:String,
     role: { type: String, default: 'user' },
-    mobile: { type: String, default: '' },
     favorites: [
         {
             type: mongoose.Schema.Types.ObjectId,

@@ -4,9 +4,7 @@ const HotelModel = require('../models/hotelModel')
 const hotelCtrl = {
     create: async (req, res) => {
         try {
-          
           const newHotel = new HotelModel(req?.body);
-      
           const savedHotel = await newHotel.save();
           res.json(savedHotel);
           } catch (err) {
