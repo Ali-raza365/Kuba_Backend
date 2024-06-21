@@ -209,6 +209,28 @@ const authCtrl = {
             return res.status(500).json({ msg: err.message })
         }
     },
+    reSendOTP: async (req, res) => {
+        try {
+            const { email, type } = req.body;
+            const user = await Users.findOne({ email });
+        
+            if (!user) return  res.status(500).json({ error: 'User not found'});
+            // Generate a random OTP
+            const otp = crypto.randomInt(100000, 999999).toString();
+            console.log({ otp })
+            if (validateEmail(email)) await sendEmail(email, otp, type || 'resendOTP')
+            user.otpCode = otp;
+            user.otpExpires = Date.now() + 120000; // Token expires in 2 minutes 
+            await user.save();
+        
+            res.json({ message: 'OTP Sent successfully' });
+            
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Server Not Responded: Try Again Later' });
+
+        }
+    }
 }
 
 const createAccessToken = (payload) => {
