@@ -49,6 +49,10 @@ const hotelSchema  = new mongoose.Schema({
           ref: 'User',
         },
       ],
+      featured : {
+        type: Boolean,
+        default: Date.now
+    },
       amenities: [String], // e.g., ["pool", "gym", "spa"]
       description: String,
     },

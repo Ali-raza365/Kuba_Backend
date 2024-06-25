@@ -33,7 +33,15 @@ const hotelCtrl = {
       } catch (err) {
           return res.status(500).json({ message: err.message });
       }
-  }
+  },
+  getFeaturedHotels: async (req, res) => {
+    try {
+        const featuredHotels = await HotelModel.find({ featured: true }).populate('rooms');;
+        res.json(featuredHotels);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+},
 }
 
 module.exports = hotelCtrl
