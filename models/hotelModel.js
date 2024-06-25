@@ -43,6 +43,14 @@ const hotelSchema  = new mongoose.Schema({
         ref: 'User',
         required: true,
       },
+      favorites: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+        },
+      ],
+      amenities: [String], // e.g., ["pool", "gym", "spa"]
+      description: String,
     },
        {
     timestamps: true

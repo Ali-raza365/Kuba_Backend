@@ -1,3 +1,4 @@
+const HotelModel = require('../models/hotelModel');
 const Users = require('../models/userModel')
 
 const userCtrl = {
@@ -55,6 +56,90 @@ const userCtrl = {
             res.json({ msg: 'User Deleted Successfully!' })
         } catch (err) {
             return res.status(500).json({ msg: err.message })
+        }
+    },
+    addFavorite: async (req, res) => {
+        try {
+            const { user_id, hotel_id } = req.body;
+            if (!user_id || !hotel_id) {
+                return res.status(400).json({ message: 'User ID and Hotel ID are required' });
+            }
+
+            const user = await Users.findById(user_id);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            if (!user.favorites.includes(hotel_id)) {
+                user.favorites.push(hotel_id);
+                await user.save();
+            }
+
+            const hotel = await HotelModel.findById(hotel_id);
+            if (!hotel) {
+                return res.status(404).json({ message: 'Hotel not found' });
+            }
+
+            if (!hotel.favorites.includes(user_id)) {
+                hotel.favorites.push(user_id);
+                await hotel.save();
+            }
+
+            res.status(200).json({ message: 'Hotel added to favorites' });
+        } catch (err) {
+            res.status(500).json({ message: err.message });
+        }
+    },
+    removeFavorite: async (req, res) => {
+        try {
+            const { user_id, hotel_id } = req.body;
+            if (!user_id || !hotel_id) {
+                return res.status(400).json({ message: 'User ID and Hotel ID are required' });
+            }
+
+            const user = await Users.findById(user_id);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            user.favorites = user.favorites.filter(fav => fav.toString() !== hotel_id);
+            await user.save();
+
+            const hotel = await HotelModel.findById(hotel_id);
+            if (!hotel) {
+                return res.status(404).json({ message: 'Hotel not found' });
+            }
+
+            hotel.favorites = hotel.favorites.filter(fav => fav.toString() !== user_id);
+            await hotel.save();
+
+            res.status(200).json({ message: 'Hotel removed from favorites' });
+        } catch (err) {
+            res.status(500).json({ message: err.message });
+        }
+    },
+    getFavorites: async (req, res) => {
+        try {
+            const { user_id } = req.params;
+            if (!user_id) {
+                return res.status(400).json({ message: 'User ID is required' });
+            }
+
+            const user = await Users.findById(user_id).populate({
+                path: 'favorites',
+                model: 'Hotel', // Assuming 'favorites' is an array of Hotel references
+                populate: {
+                    path: 'rooms',
+                    model: 'Room' // Assuming 'rooms' is an array of Room references in Hotel model
+                }
+            })
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            res.json(user.favorites);
+        } catch (err) {
+            res.status(500).json({ message: err.message });
         }
     }
 }
