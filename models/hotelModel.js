@@ -22,6 +22,10 @@ const hotelSchema  = new mongoose.Schema({
         required: true,
         trim: true,
       },
+      price: {
+        type: Number,
+        required: true,
+      },
       address: {
         type: addressSchema,
         required: true,
