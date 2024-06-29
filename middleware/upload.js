@@ -1,10 +1,5 @@
-const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
-
-const app = express();
-const port = 3000;
 
 // Set up storage for multer
 const storage = multer.diskStorage({
@@ -16,23 +11,22 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Middleware to handle image upload
+// Middleware to handle multiple image uploads
 const uploadMiddleware = (req, res, next) => {
-  upload.single('image')(req, res, (err) => {
+  upload.array('images', 10)(req, res, (err) => { // Allow up to 10 files
     if (err) {
-      return res.status(400).send('Error uploading file.');
+      return res.status(400).send('Error uploading files.');
     }
 
-    if (!req.file) {
-    //   return res.status(400).send('No file uploaded.');
-    console.log("No file uploaded.")
-    next();
-    return
+    if (!req.files || req.files.length === 0) {
+      console.log("No files uploaded.");
+      next();
+      return;
     }
-    req.imageUrl = `uploads/${req.file.filename}`;
+
+    req.imageUrls = req.files.map(file => `uploads/${file.filename}`);
     next();
   });
 };
 
-module.exports = uploadMiddleware
-
+module.exports = uploadMiddleware;
