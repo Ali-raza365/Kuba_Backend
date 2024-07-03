@@ -77,10 +77,8 @@ const authCtrl = {
             }
             // Generate a random OTP
             const otp = crypto.randomInt(100000, 999999).toString();
-
             console.log({ otp })
-
-            if (validateEmail(email)) sendEmail(email, otp, 'accountActivation')
+            if (email) sendEmail(email, otp, 'forgotPassword')
 
             // console.log({ mail_result })
 
@@ -161,10 +159,8 @@ const authCtrl = {
 
             if (!email)
                 return res.status(500).json({ msg: "Email is required!" })
-
             const password = email +  process.env.MAIL_CLIENT_SECRET;
             const passwordHash = await bcrypt.hash(password, 12)
-
             const user = await Users.findOne({ email: email })
 
             if (user) {
@@ -214,7 +210,7 @@ const authCtrl = {
             // Generate a random OTP
             const otp = crypto.randomInt(100000, 999999).toString();
             console.log({ otp })
-            if (validateEmail(email)) await sendEmail(email, otp, type || 'resendOTP')
+            if (email) await sendEmail(email, otp, type || 'resendOTP')
             user.otpCode = otp;
             user.otpExpires = Date.now() + 120000; // Token expires in 2 minutes 
             await user.save();
