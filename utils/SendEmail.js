@@ -21,7 +21,7 @@ async function createTransporter(access_token) {
   });
 }
 
-async function sendEmail(to, otp) {
+async function sendEmail(to, otp,type) {
   try {
 
     const oAuth2Client = new OAuth2Client(
@@ -29,6 +29,11 @@ async function sendEmail(to, otp) {
       mailClientSecret,
       OAUTH_PLAYGROUND
     );
+    
+    let data={
+      otp,
+      supportEmail:senderEmailAddress
+    }
 
     oAuth2Client.setCredentials({ refresh_token: mailRefreshToken });
 
@@ -37,31 +42,10 @@ async function sendEmail(to, otp) {
     const transporter =await  createTransporter(access_token);
     console.log({transporter})
     const message = {
-      from: process.env.EMAIL_USERNAME,
+        from: `Kuba <${process.env.EMAIL_USERNAME}>`,
       to,
-      subject: "Team mates Rest Password",
-      html: `
-         <div style="font-family: Helvetica,Arial,sans-serif;min-width:1000px;overflow:auto;line-height:2">
-         <div style="margin:50px auto;width:70%;padding:20px 0">
-           <div style="border-bottom:1px solid #eee">
-             <a href="" style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">Team mates</a>
-           </div>
-           <p style="font-size:1.1em">Hi,</p>
-           <p>We have received a request to reset your account password. To proceed with the password reset, please use the following One-Time Password (OTP):</p>
-           <h2 style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">${otp}</h2>
-           <p>Please note that the OTP is valid for a limited time, typically 1 hours. If the OTP expires, you will need to initiate the password recovery process again.</p>
-           <p>If you did not request a password reset or believe this email was sent to you by mistake, please disregard this message. Your account security is important to us, and we advise you to monitor your account for any suspicious activity.</>
-           <p>If you require any further assistance, please don't hesitate to reach out to our support team at [Support Email] or visit our help center at [Help Center URL].</p>
-           <p style="font-size:0.9em;">Regards,<br />Team mates</p>
-           <hr style="border:none;border-top:1px solid #eee" />
-           <div style="float:right;padding:8px 0;color:#aaa;font-size:0.8em;line-height:1;font-weight:300">
-             <p>Team mates Inc</p>
-             <p>1600 Amphitheatre Parkway</p>
-             <p>California</p>
-           </div>
-         </div>
-       </div>
-               `,
+      subject: "Kuba",
+      html: getEmailTemplate(type,data)
     };
     transporter?.sendMail(message,function(error, info) {
       if (error) {
@@ -76,6 +60,125 @@ async function sendEmail(to, otp) {
     console.log({...error})
     // console.error('Error sending email:', error);
     throw error;
+  }
+}
+
+
+function getEmailTemplate(type, data) {
+  const { otp,supportEmail } = data;
+
+  switch (type) {
+    case 'accountActivation':
+      return `
+      <html lang="en">
+      <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Activate Your Account</title>
+      <style>
+        body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .email-container { background-color: #ffffff; width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        .otp { font-size: 24px; font-weight: bold; color: #333; letter-spacing: 3px; }
+        h1, p { color: #333333; }
+        .footer { font-size: 12px; color: #777; text-align: center; margin-top: 20px; }
+        .border {border-bottom:1px solid #eee}
+        .name {font-size:1.6em;color: #00466a;text-decoration:none;font-weight:600}
+      </style>
+      </head>
+      <body>
+      <div class="email-container">
+          <div class="border">
+              <a href="" class="name">Kuba</a>
+            </div>
+        <h1>Account Activation</h1>
+        <p>Hi there,</p>
+        <p>Welcome! Please use the following One-Time Password (OTP) to activate your account:</p>
+        <div class="otp">${otp}</div>
+        <p>This OTP is valid for only 2 minutes. Please enter this OTP in the provided field to complete your registration process.</p>
+        <p>If you did not create an account, no further action is required.</p>
+        <p class="border">Thank you,<br>Your Team <br> </p>
+        <div class="footer">
+          <p>For questions, please contact ${supportEmail}</p>
+        </div>
+      </div>
+      </body>
+      </html>
+      `;
+    case 'forgotPassword':
+        return `
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Activate Your Account</title>
+        <style>
+          body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+          .email-container { background-color: #ffffff; width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+          .otp { font-size: 24px; font-weight: bold; color: #333; letter-spacing: 3px; }
+          h1, p { color: #333333; }
+          .footer { font-size: 12px; color: #777; text-align: center; margin-top: 20px; }
+          .border {border-bottom:1px solid #eee}
+          .name {font-size:1.6em;color: #00466a;text-decoration:none;font-weight:600}
+        </style>
+        </head>
+        <body>
+        <div class="email-container">
+        <h1>Password Reset Request</h1>
+        <p>Hi there,</p>
+        <p>You have requested to reset your password. Please use the following One-Time Password (OTP) to proceed with resetting your password:</p>
+        <div class="otp">${otp}</div>
+        <p>This OTP is valid for only 2 minutes. Please do not share this OTP with anyone.</p>
+        <p>If you did not request this, please ignore this email or contact our support team.</p>
+        <p>Thank you,<br>Your Team</p>
+          <div class="footer">
+            <p>For questions, please contact ${supportEmail}</p>
+          </div>
+        </div>
+        </body>
+        </html>
+        `;
+    case 'resendOTP':
+          return `
+          <html lang="en">
+          <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Resend OTP</title>
+          <style>
+            body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+            .email-container { background-color: #ffffff; width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+            .otp { font-size: 24px; font-weight: bold; color: #333; letter-spacing: 3px; }
+            h1, p { color: #333333; }
+            .footer { font-size: 12px; color: #777; text-align: center; margin-top: 20px; }
+            .border {border-bottom:1px solid #eee}
+            .name {font-size:1.6em;color: #00466a;text-decoration:none;font-weight:600}
+          </style>
+          </head>
+          <body>
+          <div class="email-container">
+          <h1>Resend OTP</h1>
+          <p>Hi there,</p>
+          <p>As requested, here is your new One-Time Password (OTP) to proceed:</p>
+          <div class="otp">${otp}</div>
+          <p>Please use this OTP within 2 minutes. Do not share this OTP with anyone.</p>
+          <p>If you did not request this, please ignore this email or contact our support team immediately.</p>
+          <p>Thank you,<br>Your Team</p>
+            <div class="footer">
+              <p>For questions, please contact ${supportEmail}</p>
+            </div>
+          </div>
+          </body>
+          </html>
+          `;
+    default:
+      return `
+        <html>
+        <body>
+          <h1>Hello!</h1>
+          <p>This is a default email, your content will appear here.</p>
+        </body>
+        </html>
+      `;
   }
 }
 

@@ -20,7 +20,7 @@ const authCtrl = {
             const passwordHash = await bcrypt.hash(password, 12)
 
                 const otp = crypto.randomInt(100000, 999999).toString();
-                let mail_result = await sendEmail(email, otp)
+                let mail_result = await sendEmail(email, otp,'accountActivation')
 
             const newUser = new Users({
                 fullname,
@@ -80,7 +80,8 @@ const authCtrl = {
 
             console.log({ otp })
 
-            // let mail_result = await sendEmail(email, otp)
+            if (validateEmail(email)) sendEmail(email, otp, 'accountActivation')
+
             // console.log({ mail_result })
 
             user.otpCode = otp;
@@ -155,19 +156,13 @@ const authCtrl = {
     },
     googleLogin: async (req, res) => {
         try {
-            const { id_token } = req.body
-            const verify = await client.verifyIdToken({
-                idToken: id_token, audience: `${process.env.MAIL_CLIENT_ID}`
-            })
 
-            const {
-                email, email_verified, name, picture
-            } = verify.getPayload()
+         const   {email, email_verified, name, picture } = req.body
 
-            if (!email_verified)
-                return res.status(500).json({ msg: "Email verification failed." })
+            if (!email)
+                return res.status(500).json({ msg: "Email is required!" })
 
-            const password = email + 'your google secrect password'
+            const password = email +  process.env.MAIL_CLIENT_SECRET;
             const passwordHash = await bcrypt.hash(password, 12)
 
             const user = await Users.findOne({ email: email })
@@ -190,6 +185,7 @@ const authCtrl = {
                     email,
                     password: passwordHash,
                     avatar: picture,
+                    user_verified:true,
                     type: 'google'
                 }
                 const newUser = new Users(user)
