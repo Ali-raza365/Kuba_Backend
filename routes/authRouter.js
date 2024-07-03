@@ -7,5 +7,7 @@ router.post('/login', authCtrl.login);
 router.post('/forgot-password', authCtrl.forgotPasswordRoute);
 router.post('/verify-otp', authCtrl.verifyOTPRoute);
 router.post('/resend-otp', authCtrl.reSendOTP);
-router.post('/change-password', authCtrl.changePasswordRoute);
+router.post('/reset-password', authCtrl.resetPasswordRoute);
+router.post("/change-password", authCtrl.changePasswordRoute);
+
 module.exports = router

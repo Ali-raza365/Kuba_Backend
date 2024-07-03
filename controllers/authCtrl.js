@@ -9,7 +9,7 @@ const { OAuth2Client } = require('google-auth-library')
 const authCtrl = {
     register: async (req, res) => {
         try {
-            const { fullname, email, password , phone} = req.body
+            const { fullname, email, password, phone } = req.body
 
             const user_email = await Users.findOne({ email })
             if (user_email) return res.status(400).json({ msg: "This email already exists." })
@@ -19,8 +19,8 @@ const authCtrl = {
 
             const passwordHash = await bcrypt.hash(password, 12)
 
-                const otp = crypto.randomInt(100000, 999999).toString();
-                let mail_result = await sendEmail(email, otp,'accountActivation')
+            const otp = crypto.randomInt(100000, 999999).toString();
+            let mail_result = await sendEmail(email, otp, 'accountActivation')
 
             const newUser = new Users({
                 fullname,
@@ -71,7 +71,7 @@ const authCtrl = {
         const { email } = req.body;
         try {
             const user = await Users.findOne({ email })
-        console.log(user)
+            console.log(user)
             if (!user) {
                 return res.status(404).json({ error: 'User not found' });
             }
@@ -123,7 +123,7 @@ const authCtrl = {
             res.status(500).json({ error: 'Internal server error' });
         }
     },
-    changePasswordRoute: async (req, res) => {
+    resetPasswordRoute: async (req, res) => {
         const { email, newPassword } = req.body;
 
         try {
@@ -131,6 +131,9 @@ const authCtrl = {
 
             if (!user) {
                 return res.status(404).json({ error: 'User not found' });
+            }
+            if (!newPassword) {
+                return res.status(404).json({ error: 'Please Enter old Password' });
             }
             if (!newPassword) {
                 return res.status(404).json({ error: 'Please Enter New Password' });
@@ -152,14 +155,46 @@ const authCtrl = {
             res.status(500).json({ error: 'Internal server error' });
         }
     },
+    changePasswordRoute: async (req, res) => {
+        const { email, password, newPassword } = req.body;
+
+        try {
+            const user = await Users.findOne({ email });
+
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            if (!newPassword) {
+                return res.status(404).json({ error: 'Please Enter New Password' });
+            }
+
+            if (newPassword?.length < 6)
+                return res.status(400).json({ msg: "Password must be at least 6 characters." })
+
+            const isMatch = await bcrypt.compare(password, user.password)
+            if (!isMatch) return res.status(400).json({ msg: "Old password is incorrect." })
+
+            const passwordHash = await bcrypt.hash(newPassword, 12)
+
+            user.password = passwordHash;
+            user.otpCode = undefined;
+            user.otpExpires = undefined;
+            await user.save();
+
+            res.json({ message: 'Password changed successfully' });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    },
     googleLogin: async (req, res) => {
         try {
 
-         const   {email, email_verified, name, picture } = req.body
+            const { email, email_verified, name, picture } = req.body
 
             if (!email)
                 return res.status(500).json({ msg: "Email is required!" })
-            const password = email +  process.env.MAIL_CLIENT_SECRET;
+            const password = email + process.env.MAIL_CLIENT_SECRET;
             const passwordHash = await bcrypt.hash(password, 12)
             const user = await Users.findOne({ email: email })
 
@@ -181,7 +216,7 @@ const authCtrl = {
                     email,
                     password: passwordHash,
                     avatar: picture,
-                    user_verified:true,
+                    user_verified: true,
                     type: 'google'
                 }
                 const newUser = new Users(user)
@@ -205,18 +240,16 @@ const authCtrl = {
         try {
             const { email, type } = req.body;
             const user = await Users.findOne({ email });
-        
-            if (!user) return  res.status(500).json({ error: 'User not found'});
-            // Generate a random OTP
+            if (!user) return res.status(500).json({ error: 'User not found' });
             const otp = crypto.randomInt(100000, 999999).toString();
             console.log({ otp })
             if (email) await sendEmail(email, otp, type || 'resendOTP')
             user.otpCode = otp;
             user.otpExpires = Date.now() + 120000; // Token expires in 2 minutes 
             await user.save();
-        
+
             res.json({ message: 'OTP Sent successfully' });
-            
+
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: 'Server Not Responded: Try Again Later' });

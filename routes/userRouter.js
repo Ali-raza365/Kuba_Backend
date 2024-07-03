@@ -10,7 +10,7 @@ router.get('/user/info', auth, userCtrl.getUserInfo)
 router.post('/user/delete', auth, userCtrl.deleteUser)
 
 router.post('/user/favorites', userCtrl.addFavorite);
-router.delete('/user/favorites', userCtrl.removeFavorite);
+router.post('/user/rm-favorites', userCtrl.removeFavorite);
 router.get('/user/:user_id/favorites', userCtrl.getFavorites);
 
 module.exports = router
