@@ -6,7 +6,7 @@ router.post('/hotel/create', hotelCtrl.create);
 router.get('/hotel/all', hotelCtrl.getAll);
 router.post('/hotel/info', hotelCtrl.getDetail);
 router.get('/hotel/featured', hotelCtrl.getFeaturedHotels);
-router.get('/upload', uploadMiddleware,hotelCtrl.upload);
+router.post('/upload', uploadMiddleware,hotelCtrl.upload);
 router.get('/hotel/user/:user_id', hotelCtrl.getHotelsByCreatedBy);
 router.get('/hotel/search', hotelCtrl.getHotelsByAddress);
 

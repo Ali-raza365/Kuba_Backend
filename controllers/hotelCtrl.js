@@ -276,8 +276,8 @@ const hotelCtrl = {
             if (!req.imageUrls || req.imageUrls.length === 0) {
                 return res.status(400).send('No files uploaded.');
             }
-              const imageUrls = req.imageUrls
-            //   const imageUrls = req.imageUrls.map(imageUrl => `${req.protocol}://${req.get('host')}/${imageUrl}`);
+              // const imageUrls = req.imageUrls
+              const imageUrls = req.imageUrls.map(imageUrl => `${req.protocol}://${req.get('host')}/${imageUrl}`);
             res.status(200).json({ imageUrls });
         } catch (err) {
             res.status(500).json({ message: err.message });
