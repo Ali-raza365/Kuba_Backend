@@ -20,7 +20,7 @@ const authCtrl = {
             const passwordHash = await bcrypt.hash(password, 12)
 
             const otp = crypto.randomInt(100000, 999999).toString();
-            let mail_result = await sendEmail(email, otp, 'accountActivation')
+            let mail_result =  sendEmail(email, otp, 'accountActivation')
 
             const newUser = new Users({
                 fullname,
